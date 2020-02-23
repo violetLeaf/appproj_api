@@ -114,7 +114,8 @@ app.get('/tour/:id', cors(), (req, res) => {
         result.areas.push(area);
 
         getallAsyncFunction("STATION", area.id).then(function(val_station){
-          area.stations = [];
+          // area.stations = [];
+          result.areas.stations = [];
 
           val_station.forEach(el => {
             let station = {
@@ -122,38 +123,42 @@ app.get('/tour/:id', cors(), (req, res) => {
               "name": el.name
             };
 
-            area.stations.push(station);
+            // area.stations.push(station);
+            result.areas.stations.push(station);
 
             getallAsyncFunction("MEDIA", station.id).then(function(val_media){
-              station.medias = [];
+              // station.medias = [];
+              result.areas.stations.medias = [];
     
               val_media.forEach(ele => {
                 let media = null;
-                // if(val_media.text_id != null){
+                
+                if(ele.text_id != null){
                   media = {
                     "id": ele.id,
                     "type": "text",
                     "caption": ele.caption,
                     "text": ele.text
                   };
-                // }
-                // else if(val_media[k].file_id != null){
-                //   media = {
-                //     "id": val_media[k].id,
-                //     "type": "file",
-                //     "caption": val_media[k].caption,
-                //     "url": val_media[k].destinationurl
-                //   };
-                // }
+                }
+                else if(ele.file_id != null){
+                  media = {
+                    "id": val_media[k].id,
+                    "type": "file",
+                    "caption": val_media[k].caption,
+                    "url": val_media[k].destinationurl
+                  };
+                }
     
-                station.medias.push(media);
+                // station.medias.push(media);
+                result.areas.stations.medias.push(media);
+                console.log(result);
               });
             });
           });
         });
       });
 
-      console.log(result);
       res.json(result);
       data = JSON.stringify(result, null, 2);
 
