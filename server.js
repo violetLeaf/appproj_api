@@ -38,7 +38,14 @@ async function getallAsyncFunction() {
     }
 
     else if (arguments[0] == "STATION"){
-      rows = await conn.query("SELECT * `station` FROM  WHERE area_id=" + arguments[1] + ";");
+      // noch überarbeiten!
+      rows = await conn.query("SELECT * FROM `station` WHERE area_id=" + arguments[1] + ";");
+    }
+
+    else if (arguments[0] == "MEDIA"){
+      // noch überarbeiten!
+      rows = await conn.query("SELECT * FROM `media` LEFT JOIN text ON media.text_id=text.id LEFT JOIN file ON media.file_id=file.id " +
+      "WHERE station_id=" + arguments[1] + ";");
     }
 
     else{
@@ -95,36 +102,110 @@ app.get('/tour/:id', cors(), (req, res) => {
     };
 
     getallAsyncFunction("AREA", val[0].id).then(function(val_area){ 
-      result.areas = []
+      result.areas = [];
 
-      val_area.forEach(function(item) {
+      val_area.forEach(e => {
         let area = {
-          "id": item.id,
-          "title": item.title,
-          "position": item.position
+          "id": e.id,
+          "title": e.title,
+          "position": e.position
         };
-        
+
         result.areas.push(area);
-      });
-      
-      // in progress
-      getallAsyncFunction("STATION", val_area.id).then(function(val_station){
-        result.areas.stations = []
 
-        val_station.forEach(function(i){
-          let station = {
-            "id": i.id,
-            "name": i.name
-          };
+        getallAsyncFunction("STATION", area.id).then(function(val_station){
+          area.stations = [];
 
-          result.areas.stations.push(station);
+          val_station.forEach(el => {
+            let station = {
+              "id": el.id,
+              "name": el.name
+            };
+
+            area.stations.push(station);
+
+            getallAsyncFunction("MEDIA", station.id).then(function(val_media){
+              station.medias = [];
+    
+              val_media.forEach(ele => {
+                let media = null;
+                // if(val_media.text_id != null){
+                  media = {
+                    "id": ele.id,
+                    "type": "text",
+                    "caption": ele.caption,
+                    "text": ele.text
+                  };
+                // }
+                // else if(val_media[k].file_id != null){
+                //   media = {
+                //     "id": val_media[k].id,
+                //     "type": "file",
+                //     "caption": val_media[k].caption,
+                //     "url": val_media[k].destinationurl
+                //   };
+                // }
+    
+                station.medias.push(media);
+              });
+            });
+          });
         });
-
-        
-        res.json(result);
-        data = JSON.stringify(val, null, 2);
-        console.log(req.params.id);
       });
+
+      console.log(result);
+      res.json(result);
+      data = JSON.stringify(result, null, 2);
+
+      // for(var i = 0; i < val_area.length; i++){
+      //   let area = {
+      //     "id": val_area[i].id,
+      //     "title": val_area[i].title,
+      //     "position": val_area[i].position
+      //   };
+        
+      //   result.areas.push(area);
+
+      //   getallAsyncFunction("STATION", area.id).then(function(val_station){
+      //     result.areas[i].stations = [];
+
+      //     for(var j = 0; j < val_station.length; j++){
+      //       let station = {
+      //         "id": val_station[j].id,
+      //         "name": val_station[j].name
+      //       };
+
+      //       result.areas[i].stations.push(station);
+
+      //       getallAsyncFunction("MEDIA", station.id).then(function(val_media){
+      //         result.areas[i].stations[j].medias = [];
+    
+      //         for(var k = 0; k < val_media.length; k++){
+      //           let media = null;
+      //           // if(val_media.text_id != null){
+      //             media = {
+      //               "id": val_media[k].id,
+      //               "type": "text",
+      //               "caption": val_media[k].caption,
+      //               "text": val_media[k].text
+      //             };
+      //           // }
+      //           // else if(val_media[k].file_id != null){
+      //           //   media = {
+      //           //     "id": val_media[k].id,
+      //           //     "type": "file",
+      //           //     "caption": val_media[k].caption,
+      //           //     "url": val_media[k].destinationurl
+      //           //   };
+      //           // }
+    
+      //           result.areas[i].stations[j].medias.push(media);
+      //         };
+      //       });
+      //     };
+      //   });
+      // }
+
   
       // (() => {
       //   const deletedPaths = del(['tour/**', '!tour']);
