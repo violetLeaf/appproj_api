@@ -38,11 +38,18 @@ async function getallAsyncFunction() {
       "WHERE tour_id=" + arguments[1] + ";");
     }
 
+    else if (arguments[0] == "STATION"){
+      // noch überarbeiten!
+      rows = await conn.query("SELECT * FROM station WHERE area_id=" + arguments[1] + ";");
+    }
+
     else if (arguments[0] == "STATIONTOUR"){
+      // noch überarbeiten!
       rows = await conn.query("SELECT DISTINCT station.* FROM tour_has_station JOIN station ON station.id = tour_has_station.station_id WHERE tour_id=" + arguments[1] + " AND  area_id=" + arguments[2] + ";");
     }
 
     else if (arguments[0] == "MEDIATOUR"){
+      // noch überarbeiten!
       rows = await conn.query("SELECT *, text.id AS textId, file.id AS fileId FROM tour_has_station JOIN media ON tour_has_station.media_id = media.id "+
           "LEFT JOIN text ON media.text_id=text.id LEFT JOIN file ON media.file_id=file.id " +
           "WHERE tour_id=" + arguments[1] + " AND tour_has_station.station_id=" + arguments[2] + ";");
@@ -163,35 +170,12 @@ let areas = await getallAsyncFunction("AREA", tour[0].id);
   }
 
   await res.json(result);
-  
-  data = JSON.stringify(result, null, 2);
-
-  try{
-    fs.mkdirSync('tours');
-  }
-  catch{ console.log("Tours Repository already exists.");}
-  finally{}
-  fs.mkdirSync('tours/tour_' + result.id);
-  fs.mkdirSync('tours/tour_' + result.id + '/media');
-        
-  fs.writeFile('tours/tour_' + result.id + '/route.json', data, (err)=>{
-    if (err) throw err;
-    console.log("Data written to file.");
-  });
 });
 
-// noch prüfen
 app.get('/download/:filename', function(req, res){
-  const file = `${__dirname}/media/` + req.params.filename;
+  const file = `${__dirname}/tour/` + req.params.filename;
   console.log(file);
   res.download(file); // Set disposition and send it.
 });
 
 app.listen(port, () => console.log(`App listening on port ${port}!`));
-
-
-
-  // (() => {
-  //   const deletedPaths = del(['tour/**', '!tour']);
-  //   console.log('Deleted files and directories:\n', deletedPaths.join('\n'));
-  // })();

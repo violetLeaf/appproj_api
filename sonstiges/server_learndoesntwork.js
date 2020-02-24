@@ -1,9 +1,8 @@
-// Stefan
 // Tutorial: https://stackabuse.com/reading-and-writing-json-files-with-node-js/
 
 // Holen von der DB
 const mariadb = require('mariadb');
-const pool = mariadb.createPool({host: "localhost", user: "root", password: "", connectionLimit: 5, database: "mphirschmann"});
+const pool = mariadb.createPool({host: "localhost", user: "admin2", password: "1234", connectionLimit: 5, database: "mphirschmann"});
 
 const fs = require('fs');
 const del = require('del');
@@ -26,23 +25,36 @@ async function getallAsyncFunction() {
     }
 
     else if (arguments[0] == "TOURinformationen"){
-      rows = await conn.query("SELECT * FROM tour_has_station JOIN media ON media_id = media.id LEFT JOIN text ON media.text_id = text.id LEFT " +
+      rows = await conn.query("SELECT * FROM `tour_has_station` JOIN media ON media_id = media.id LEFT JOIN text ON media.text_id = text.id LEFT " +
       "JOIN file ON media.file_id = file.id JOIN station ON tour_has_station.station_id = station.id JOIN area ON station.area_id = area.id " +
-      "WHERE tour_id= " + arguments[1] + " ORDER BY ordernumber");
+      "WHERE `tour_id`= " + arguments[1] + " ORDER BY ordernumber");
     }
 
     else if (arguments[0] == "AREA"){
-      rows = await conn.query("SELECT DISTINCT area.* FROM tour_has_station " + 
+      rows = await conn.query("SELECT DISTINCT area.* FROM `tour_has_station` " + 
       "JOIN station ON station.id = station_id " +
       "JOIN area ON area.id = station.area_id " +
       "WHERE tour_id=" + arguments[1] + ";");
     }
 
+    else if (arguments[0] == "STATION"){
+      // noch überarbeiten!
+      rows = await conn.query("SELECT * FROM `station` WHERE area_id=" + arguments[1] + ";");
+    }
+
+    // else if (arguments[0] == "MEDIA"){
+    //   // noch überarbeiten!
+    //   rows = await conn.query("SELECT * FROM `media` LEFT JOIN text ON media.text_id=text.id LEFT JOIN file ON media.file_id=file.id " +
+    //   "WHERE station_id=" + arguments[1] + ";");
+    // }
+
     else if (arguments[0] == "STATIONTOUR"){
+      // noch überarbeiten!
       rows = await conn.query("SELECT DISTINCT station.* FROM tour_has_station JOIN station ON station.id = tour_has_station.station_id WHERE tour_id=" + arguments[1] + " AND  area_id=" + arguments[2] + ";");
     }
 
     else if (arguments[0] == "MEDIATOUR"){
+      // noch überarbeiten!
       rows = await conn.query("SELECT *, text.id AS textId, file.id AS fileId FROM tour_has_station JOIN media ON tour_has_station.media_id = media.id "+
           "LEFT JOIN text ON media.text_id=text.id LEFT JOIN file ON media.file_id=file.id " +
           "WHERE tour_id=" + arguments[1] + " AND tour_has_station.station_id=" + arguments[2] + ";");
@@ -52,15 +64,17 @@ async function getallAsyncFunction() {
       console.log("An error occured, while trying to get all.");
       rows = null;
     }
+
+    return rows;
   } catch (err) {
     throw err;
   } finally {
     if (conn) conn.release(); //release to pool
   }
 
-    return new Promise(resolve => {
-      resolve(rows);
-    });
+  return new Promise(resolve => {
+    resolve(rows);
+  });
 }
 
 // -------------------------------------------------------------------------------------------------------
@@ -92,22 +106,22 @@ app.get('/tours', cors(), (req, res) => {
   });
 });
 
-app.get('/tour/:id', cors(), async (req, res) => {
+app.get('/tour/:id', cors(), (req, res) => {
   let tour = await getallAsyncFunction("TOUReinzeln", req.params.id);
 
   let result = {
-    "id": tour[0].id,
-    "title": tour[0].title,
-    "reversible": tour[0].reversible,
-    "template_id": tour[0].template_id,
-    "guide": tour[0].guide,
-    "date": tour[0].date
+    "id": val[0].id,
+    "title": val[0].title,
+    "reversible": val[0].reversible,
+    "template_id": val[0].template_id,
+    "guide": val[0].guide,
+    "date": val[0].date
   };
 
-result.areas = [];
-let areas = await getallAsyncFunction("AREA", tour[0].id);
+  result.areas = [];
+  let areas = await getallAsyncFunction("AREA", tour[0].id);
 
-  // load areas for tour
+  // load areas for the tour:
   areas.forEach(area => {
     let areaResult = {
         "id": area.id,
@@ -118,7 +132,6 @@ let areas = await getallAsyncFunction("AREA", tour[0].id);
       result.areas.push(areaResult);
   });
 
-  // load stations for area
   for (let i = 0; i < result.areas.length; i++) {
     let stations = await getallAsyncFunction("STATIONTOUR", tour[0].id, areas[i].id);
 
@@ -130,7 +143,7 @@ let areas = await getallAsyncFunction("AREA", tour[0].id);
 
       result.areas[i].stations.push(station);
     });
-
+    
     // load media for station
     for (let i = 0; i < result.areas.length; i++) {
       for (let j = 0; j < result.areas[i].stations.length; j++) {
@@ -164,34 +177,29 @@ let areas = await getallAsyncFunction("AREA", tour[0].id);
 
   await res.json(result);
   
-  data = JSON.stringify(result, null, 2);
 
-  try{
-    fs.mkdirSync('tours');
-  }
-  catch{ console.log("Tours Repository already exists.");}
-  finally{}
-  fs.mkdirSync('tours/tour_' + result.id);
-  fs.mkdirSync('tours/tour_' + result.id + '/media');
-        
-  fs.writeFile('tours/tour_' + result.id + '/route.json', data, (err)=>{
-    if (err) throw err;
-    console.log("Data written to file.");
-  });
+  // data = JSON.stringify(result, null, 2);
+  // console.log(data);
 });
 
-// noch prüfen
+  
+      // (() => {
+      //   const deletedPaths = del(['tour/**', '!tour']);
+      //   console.log('Deleted files and directories:\n', deletedPaths.join('\n'));
+      // })();
+      // fs.mkdirSync('tour');
+      // fs.mkdirSync('tour/media');
+        
+      // fs.writeFileSync('route.json', data);
+      // fs.writeFile('tour/route.json', data, (err)=>{
+      //   if (err) throw err;
+      //   console.log("Data written to file.");
+      // });
+
 app.get('/download/:filename', function(req, res){
-  const file = `${__dirname}/media/` + req.params.filename;
+  const file = `${__dirname}/tour/` + req.params.filename;
   console.log(file);
   res.download(file); // Set disposition and send it.
 });
 
 app.listen(port, () => console.log(`App listening on port ${port}!`));
-
-
-
-  // (() => {
-  //   const deletedPaths = del(['tour/**', '!tour']);
-  //   console.log('Deleted files and directories:\n', deletedPaths.join('\n'));
-  // })();

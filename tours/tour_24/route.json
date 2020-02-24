@@ -1,0 +1,54 @@
+{
+  "id": 24,
+  "title": "Hak Bregenz 5adb",
+  "reversible": 0,
+  "template_id": null,
+  "guide": "Jonas Bachmann",
+  "date": "2020-02-03T18:00:00.000Z",
+  "areas": [
+    {
+      "id": 3,
+      "title": "Area A",
+      "position": 1,
+      "stations": [
+        {
+          "id": 44,
+          "name": "Maschine C",
+          "medias": [
+            {
+              "id": 82,
+              "type": "text",
+              "caption": "",
+              "text": "adasdfasdfasdfasdf"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Bereich B",
+      "position": 2,
+      "stations": [
+        {
+          "id": 43,
+          "name": "Maschine BB",
+          "medias": [
+            {
+              "id": 83,
+              "type": "text",
+              "caption": "",
+              "text": "testest"
+            },
+            {
+              "id": 84,
+              "type": "text",
+              "caption": "",
+              "text": "asdfasdf"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
